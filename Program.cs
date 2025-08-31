@@ -117,11 +117,11 @@ static int ribbonWrappingArea(int length, int width, int height)
     //A present with dimensions 2x3x4 requires 2 + 2 + 3 + 3 = 10 feet of ribbon to wrap the present plus 2 * 3 * 4 = 24 feet of ribbon for the bow, for a total of 34 feet.
     int volume = length * width * height;
 
-    List<int> sizes = new List<int>()
-    { length, width, height };
+    int[] sizes = new List<int>()
+    { length, width, height }.OrderBy(x=>x).ToArray();
 
-    int smallest = sizes.OrderBy(x => x).ToArray()[0];
-    int middle = sizes.OrderBy(x => x).ToArray()[1];
+    int smallest = sizes[0];
+    int middle = sizes[1];
 
     int result = (2 * smallest) + (2 * middle) + volume;
 
