@@ -1,5 +1,6 @@
 ﻿//DayOne();
-DayTwo();
+//DayTwo();
+DayThree();
 
 static void DayOne()
 {
@@ -126,4 +127,56 @@ static int ribbonWrappingArea(int length, int width, int height)
     int result = (2 * smallest) + (2 * middle) + volume;
 
     return result;
+}
+
+static void DayThree()
+{
+    string directions = File.ReadAllText("Inputs\\Day3a.txt");
+
+    Dictionary<CoOrd, int> counts = new Dictionary<CoOrd,int>();
+
+    CoOrd currentPos = new CoOrd() { x=0,y=0};
+
+    counts.Add(currentPos, 1);
+
+    foreach (char direction in directions)
+    {
+        switch (direction)
+        {
+            case '^':
+                currentPos.y++;
+                break;
+            case '>':
+                currentPos.x++;
+                break;
+            case 'v':
+                currentPos.y--;
+                break;
+            case '<':
+                currentPos.x--;
+                break;
+            default:
+                break;
+        }
+
+        if (!counts.ContainsKey(currentPos))
+        {
+            counts.Add(currentPos, 1);
+        }
+        else
+        {
+            counts[currentPos]++;
+        }
+    }
+
+
+    int answerDay3Part1 = counts.Count;
+
+    Console.WriteLine(answerDay3Part1);
+    Console.ReadLine();
+}
+
+struct CoOrd
+{
+    public int x, y;
 }
