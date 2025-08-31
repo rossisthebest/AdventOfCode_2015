@@ -135,44 +135,61 @@ static void DayThree()
 
     Dictionary<CoOrd, int> counts = new Dictionary<CoOrd,int>();
 
-    CoOrd currentPos = new CoOrd() { x=0,y=0};
+    int numSantas = 2;
 
-    counts.Add(currentPos, 1);
+    CoOrd[] santaPositions = new CoOrd[numSantas];
+
+    int santaIndex = 0;
+
+    // Init all santa positions to 0,0
+    for (int i = 0; i < numSantas; i++)
+    {
+        santaPositions[i] = new CoOrd() { x = 0, y = 0 };
+    }
+
+    counts.Add(santaPositions[santaIndex], 1);
 
     foreach (char direction in directions)
     {
         switch (direction)
         {
             case '^':
-                currentPos.y++;
+                santaPositions[santaIndex].y++;
                 break;
             case '>':
-                currentPos.x++;
+                santaPositions[santaIndex].x++;
                 break;
             case 'v':
-                currentPos.y--;
+                santaPositions[santaIndex].y--;
                 break;
             case '<':
-                currentPos.x--;
+                santaPositions[santaIndex].x--;
                 break;
             default:
                 break;
         }
 
-        if (!counts.ContainsKey(currentPos))
+        if (!counts.ContainsKey(santaPositions[santaIndex]))
         {
-            counts.Add(currentPos, 1);
+            counts.Add(santaPositions[santaIndex], 1);
         }
         else
         {
-            counts[currentPos]++;
+            counts[santaPositions[santaIndex]]++;
+        }
+
+        santaIndex++;
+
+        if (santaIndex >= numSantas)
+        {
+            santaIndex = 0;
         }
     }
 
 
-    int answerDay3Part1 = counts.Count;
+    int answerDay3 = counts.Count;
 
-    Console.WriteLine(answerDay3Part1);
+    Console.WriteLine(answerDay3);
     Console.ReadLine();
 }
 
