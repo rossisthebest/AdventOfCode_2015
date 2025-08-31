@@ -12,6 +12,11 @@ static void DayOne()
     Console.WriteLine(answer);
     Console.ReadLine();
 
+    ////////////////////////////////////////////////////////
+    string strTargetPosition = File.ReadAllText("Inputs\\Day1b.txt");
+    int targetPosition = 0;
+    int.TryParse(strTargetPosition, out targetPosition);
+
 
     int currFloor = 0;
     int position = 0;
@@ -26,15 +31,16 @@ static void DayOne()
             currFloor--;
         }
 
-        if (currFloor < 0)
+        if (currFloor < targetPosition)
         {
             position = i;
             break;
         }
     }
 
-    int answerDay2 = position + 1; // position is 1 based rather than 0 based
+    int answerDay1Part2 = position + 1; // position is 1 based rather than 0 based
 
-    Console.WriteLine(answerDay2);
+    Console.WriteLine(answerDay1Part2);
     Console.ReadLine();
 }
+
