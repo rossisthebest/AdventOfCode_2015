@@ -1,4 +1,5 @@
-﻿DayOne();
+﻿//DayOne();
+DayTwo();
 
 static void DayOne()
 {
@@ -44,3 +45,85 @@ static void DayOne()
     Console.ReadLine();
 }
 
+static void DayTwo()
+{
+    List<string> presentSizes = File.ReadAllLines("Inputs\\Day2a.txt").ToList();
+
+    //List< Tuple<int,int,int> > res = presentSizes
+    //                                (
+    //                                    x =>
+    //                                       x.Select(convertToRectangularPrism(x)
+    //                                );
+
+    //Int64 totalArea = presentSizes.SelectMany
+    //                                (
+    //                                    x =>
+    //                                       (rectangularPrism) => convertToRectangularPrism(x)
+    //                                ).SelectMany
+    //                                (
+    //                                    y =>
+    //                                        (volume) => presentWrappingArea(y.Item1, y.Item2, y.Item3)
+    //                                ).Sum(z => z.volume);
+
+    Int64 answerDay2Part1 = 0;
+    Int64 answerDay2Part2 = 0;
+    foreach (string item in presentSizes)
+    {
+        Tuple<int, int, int> rectangularPrism = convertToRectangularPrism(item);
+        answerDay2Part1 += presentWrappingArea(rectangularPrism.Item1, rectangularPrism.Item2, rectangularPrism.Item3);
+        answerDay2Part2 += ribbonWrappingArea(rectangularPrism.Item1, rectangularPrism.Item2, rectangularPrism.Item3);
+    }
+
+
+    Console.WriteLine(answerDay2Part1);
+    Console.WriteLine(answerDay2Part2);
+    Console.ReadLine();
+}
+
+static Tuple<int,int,int> convertToRectangularPrism(string input)
+{
+    int length, width, height;
+    string[] inputBreakdown = input.Split('x');
+    length = int.Parse(inputBreakdown[0]);
+    width = int.Parse(inputBreakdown[1]);
+    height = int.Parse(inputBreakdown[2]);
+
+    return Tuple.Create(length, width, height);
+}
+
+static int presentWrappingArea(int length, int width, int height)
+{
+    int area1 = length * width;
+    int area2 = width * height;
+    int area3 = height * length;
+
+    int smallestArea = area1;
+    if (area2 < smallestArea)
+    {
+        smallestArea = area2;
+    }
+    if (area3 < smallestArea)
+    {
+        smallestArea = area3;
+    }
+
+    int result = (2 * area1) + (2 * area2) + (2 * area3) + smallestArea;
+
+    return result;
+}
+
+static int ribbonWrappingArea(int length, int width, int height)
+{
+    //A present with dimensions 2x3x4 requires 2 + 2 + 3 + 3 = 10 feet of ribbon to wrap the present plus 2 * 3 * 4 = 24 feet of ribbon for the bow, for a total of 34 feet.
+    int volume = length * width * height;
+
+    List<int> sizes = new List<int>()
+    { length, width, height };
+
+    int smallest = sizes.OrderBy(x => x).ToArray()[0];
+    int middle = sizes.OrderBy(x => x).ToArray()[1];
+
+    int result = (2 * smallest) + (2 * middle) + volume;
+
+    return result;
+}
