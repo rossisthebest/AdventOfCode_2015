@@ -1,6 +1,6 @@
 ﻿//DayOne();
-//DayTwo();
-DayThree();
+DayTwo();
+//DayThree();
 
 static void DayOne()
 {
@@ -98,15 +98,7 @@ static int presentWrappingArea(int length, int width, int height)
     int area2 = width * height;
     int area3 = height * length;
 
-    int smallestArea = area1;
-    if (area2 < smallestArea)
-    {
-        smallestArea = area2;
-    }
-    if (area3 < smallestArea)
-    {
-        smallestArea = area3;
-    }
+    int smallestArea = new List<int>(){ area1, area2, area3 }.OrderBy(x => x).FirstOrDefault();
 
     int result = (2 * area1) + (2 * area2) + (2 * area3) + smallestArea;
 
