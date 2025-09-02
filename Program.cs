@@ -1,4 +1,7 @@
 ﻿using AdventOfCode_2015.Types;
+using System;
+using System.Security.Cryptography;
+using System.Text;
 
 //DayOne();
 //DayTwo();
@@ -190,5 +193,64 @@ static void DayThree()
 
 static void DayFour()
 {
+    string input = File.ReadAllText("Inputs\\Day4a.txt");
+    int minNum = 1, maxNum = int.MaxValue;
 
+    int answer1, answer2;
+    answer1 = answer2 = minNum;
+
+    for (int i = minNum; i < maxNum; i++)
+    {
+        string output = processInput($"{input}{i}");
+        if (output.StartsWith("00000") && answer1 == minNum)
+        {
+            answer1 = i;
+
+            if (answer2 != minNum)
+            {
+                break;
+            }
+        }
+        else if (output.StartsWith("000000"))
+        {
+            answer2 = i;
+
+            if (answer1 != minNum)
+            {
+                break;
+            }
+        }
+    }
+
+
+    Console.WriteLine($"Answer1: {answer1}");
+    Console.WriteLine(processInput($"{input}{answer1}"));
+    Console.WriteLine($"Answer2: {answer2}");
+    Console.WriteLine(processInput($"{input}{answer2}"));
+    Console.ReadLine();
+}
+
+static string processInput(string input)
+{
+    byte[] tmpSource;
+    byte[] tmpHash;
+
+    //Create a byte array from source data.
+    tmpSource = ASCIIEncoding.ASCII.GetBytes(input);
+
+    //Compute hash based on source data.
+    tmpHash = new MD5CryptoServiceProvider().ComputeHash(tmpSource);
+
+    return ByteArrayToString(tmpHash);
+}
+
+static string ByteArrayToString(byte[] arrInput)
+{
+    int i;
+    StringBuilder sOutput = new StringBuilder(arrInput.Length);
+    for (i = 0; i < arrInput.Length; i++)
+    {
+        sOutput.Append(arrInput[i].ToString("X2"));
+    }
+    return sOutput.ToString();
 }
