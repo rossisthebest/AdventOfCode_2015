@@ -6,7 +6,8 @@ using System.Text;
 //DayOne();
 //DayTwo();
 //DayThree();
-DayFour();
+//DayFour();
+DayFive();
 
 static void DayOne()
 {
@@ -254,3 +255,77 @@ static string ByteArrayToString(byte[] arrInput)
     }
     return sOutput.ToString();
 }
+
+static void DayFive()
+{
+    int ruleListLength = 3;
+    Rule[] rules = new Rule[ruleListLength];
+
+    List<string> checkList = File.ReadAllLines("Inputs\\Day5a.txt").ToList();
+    List<string> niceList = new List<string>();
+    List<string> naughtyList = new List<string>();
+
+    rules[0] = Rule1;
+    rules[1] = Rule2;
+    rules[2] = Rule3;
+
+    foreach (string toCheck in checkList)
+    {
+        for (int i = 0; i < ruleListLength; i++)
+        {
+            if (rules[i](toCheck))
+            {
+                if (i == ruleListLength - 1)
+                {
+                    niceList.Add(toCheck);
+                }
+            }
+            else
+            {
+                naughtyList.Add(toCheck);
+                break;
+            }
+        }
+    }
+
+    int niceCount = niceList.Count;
+    int naughtyCount = naughtyList.Count;
+
+    Console.WriteLine($"NiceCount: {niceCount}");
+    Console.WriteLine($"NaughtyCount: {naughtyCount}");
+    Console.ReadLine();
+}
+
+static bool Rule1(string input)
+{
+    // It contains at least three vowels (aeiou only), like aei, xazegov, or aeiouaeiouaeiou.
+    List<char> goodChars = new List<char>() { 'a','e','i','o','u'};
+    bool containsVowels = input.Where(x => goodChars.Contains(x)).Count() > 2;
+    return containsVowels;
+}
+
+static bool Rule2(string input)
+{
+    bool res = false;
+    // It contains at least one letter that appears twice in a row, like xx, abcdde (dd), or aabbccdd (aa, bb, cc, or dd).
+    for (int i = 1; i < input.Length; i++)
+    {
+        if (input[i] == input[i-1])
+        {
+            res = true;
+            break;
+        }
+        
+    }
+    return res;
+}
+
+static bool Rule3(string input)
+{
+    // It does not contain the strings ab, cd, pq, or xy, even if they are part of one of the other requirements.
+    List<string> badWords = new List<string>() { "ab", "cd", "pq", "xy" };
+    bool res = !badWords.Exists(x=> input.Contains(x));
+    return res;
+}
+
+delegate bool Rule(string input);
