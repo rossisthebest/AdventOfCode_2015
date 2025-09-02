@@ -1,6 +1,9 @@
-﻿//DayOne();
-DayTwo();
+﻿using AdventOfCode_2015.Types;
+
+//DayOne();
+//DayTwo();
 //DayThree();
+DayFour();
 
 static void DayOne()
 {
@@ -185,7 +188,7 @@ static void DayThree()
     Console.ReadLine();
 }
 
-struct CoOrd
+static void DayFour()
 {
-    public int x, y;
+
 }
