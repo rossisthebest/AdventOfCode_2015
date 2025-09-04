@@ -20,4 +20,10 @@ namespace AdventOfCode_2015.Types
         Off,
         Toggle
     }
+
+    struct LightCommand
+    {
+        public LightAction Action;
+        public CoOrd StartPos, EndPos;
+    }
 }

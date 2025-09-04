@@ -391,16 +391,22 @@ static void DaySix()
     List<string> commands = File.ReadAllLines("Inputs\\Day6a.txt").ToList();
     int lightCount = 0;
 
+    int[,] lightBrightnessGrid = new int[width, height];
+    int lightBrightness = 0;
+
     foreach (string command in commands)
     {
-        ProcessCommand(command, lightsGrid, ref lightCount);
+        LightCommand lightCommand = GetLightCommand(command);
+        ProcessCommand(lightCommand, lightsGrid, ref lightCount);
+        ProcessBrightnessCommand(lightCommand, lightBrightnessGrid, ref lightBrightness);
     }
 
     Console.WriteLine($"LightCount: {lightCount}");
+    Console.WriteLine($"LightBrightness: {lightBrightness}");
     Console.ReadLine();
 }
 
-static void ProcessCommand(string command, bool[,] lightsGrid, ref int lightCount)
+static LightCommand GetLightCommand(string command)
 {
     LightAction action = LightAction.Unknown;
 
@@ -429,11 +435,25 @@ static void ProcessCommand(string command, bool[,] lightsGrid, ref int lightCoun
     startPos = new CoOrd() { x = int.Parse(startPosCommand.Split(',')[0]), y = int.Parse(startPosCommand.Split(',')[1]) };
     endPos = new CoOrd() { x = int.Parse(endPosCommand.Split(',')[0]), y = int.Parse(endPosCommand.Split(',')[1]) };
 
-    for (int x = startPos.x; x <= endPos.x; x++)
+
+    LightCommand cmd = new LightCommand()
     {
-        for (int y = startPos.y; y <= endPos.y; y++)
+        Action = action,
+        StartPos = startPos,
+        EndPos = endPos
+    };
+
+    return cmd;
+}
+
+static void ProcessCommand(LightCommand command, bool[,] lightsGrid, ref int lightCount)
+{
+
+    for (int x = command.StartPos.x; x <= command.EndPos.x; x++)
+    {
+        for (int y = command.StartPos.y; y <= command.EndPos.y; y++)
         {
-            switch (action)
+            switch (command.Action)
             {
                 case LightAction.Unknown:
                     throw new NotImplementedException();
@@ -455,6 +475,42 @@ static void ProcessCommand(string command, bool[,] lightsGrid, ref int lightCoun
                 case LightAction.Toggle:
                     lightCount = lightCount + (lightsGrid[x, y] ? -1 : 1);
                     lightsGrid[x, y] = !lightsGrid[x, y];
+                    break;
+                default:
+                    throw new NotImplementedException();
+                    break;
+            }
+        }
+
+    }
+}
+
+static void ProcessBrightnessCommand(LightCommand command, int[,] lightBrightnessGrid, ref int lightBrightness)
+{
+
+    for (int x = command.StartPos.x; x <= command.EndPos.x; x++)
+    {
+        for (int y = command.StartPos.y; y <= command.EndPos.y; y++)
+        {
+            switch (command.Action)
+            {
+                case LightAction.Unknown:
+                    throw new NotImplementedException();
+                    break;
+                case LightAction.On:
+                    lightBrightness++;
+                    lightBrightnessGrid[x, y]++;
+                    break;
+                case LightAction.Off:
+                    if (lightBrightnessGrid[x, y] > 0)
+                    {
+                        lightBrightnessGrid[x, y]--;
+                        lightBrightness--;
+                    }
+                    break;
+                case LightAction.Toggle:
+                    lightBrightness = lightBrightness + 2;
+                    lightBrightnessGrid[x, y] = lightBrightnessGrid[x, y] + 2;
                     break;
                 default:
                     throw new NotImplementedException();
