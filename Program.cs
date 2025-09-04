@@ -7,7 +7,8 @@ using System.Text;
 //DayTwo();
 //DayThree();
 //DayFour();
-DayFive();
+//DayFive();
+DaySix();
 
 static void DayOne()
 {
@@ -381,3 +382,85 @@ static bool Rule5(string input)
     return res;
 }
 
+static void DaySix()
+{
+    int width, height;
+    width = height = 1000;
+    bool[,] lightsGrid = new bool[width,height];
+
+    List<string> commands = File.ReadAllLines("Inputs\\Day6a.txt").ToList();
+    int lightCount = 0;
+
+    foreach (string command in commands)
+    {
+        ProcessCommand(command, lightsGrid, ref lightCount);
+    }
+
+    Console.WriteLine($"LightCount: {lightCount}");
+    Console.ReadLine();
+}
+
+static void ProcessCommand(string command, bool[,] lightsGrid, ref int lightCount)
+{
+    LightAction action = LightAction.Unknown;
+
+    CoOrd startPos, endPos;
+
+    if (command.StartsWith("turn on"))
+    {
+        action = LightAction.On;
+        command = command.Replace("turn on", "").Trim();
+    }
+    else if (command.StartsWith("turn off"))
+    {
+        action = LightAction.Off;
+        command = command.Replace("turn off", "").Trim();
+    }
+    else if (command.StartsWith("toggle"))
+    {
+        action = LightAction.Toggle;
+        command = command.Replace("toggle", "").Trim();
+    }
+
+    string[] remainingCommands = command.Split(" ");
+    string startPosCommand = remainingCommands[0];
+    string endPosCommand = remainingCommands[2];
+
+    startPos = new CoOrd() { x = int.Parse(startPosCommand.Split(',')[0]), y = int.Parse(startPosCommand.Split(',')[1]) };
+    endPos = new CoOrd() { x = int.Parse(endPosCommand.Split(',')[0]), y = int.Parse(endPosCommand.Split(',')[1]) };
+
+    for (int x = startPos.x; x <= endPos.x; x++)
+    {
+        for (int y = startPos.y; y <= endPos.y; y++)
+        {
+            switch (action)
+            {
+                case LightAction.Unknown:
+                    throw new NotImplementedException();
+                    break;
+                case LightAction.On:
+                    if (!lightsGrid[x, y])
+                    {
+                        lightCount++;
+                    }
+                    lightsGrid[x, y] = true;
+                    break;
+                case LightAction.Off:
+                    if (lightsGrid[x, y])
+                    {
+                        lightCount--;
+                    }
+                    lightsGrid[x, y] = false;
+                    break;
+                case LightAction.Toggle:
+                    lightCount = lightCount + (lightsGrid[x, y] ? -1 : 1);
+                    lightsGrid[x, y] = !lightsGrid[x, y];
+                    break;
+                default:
+                    throw new NotImplementedException();
+                    break;
+            }
+        }
+
+    }
+}

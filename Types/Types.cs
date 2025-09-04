@@ -13,4 +13,11 @@ namespace AdventOfCode_2015.Types
 
     delegate bool Rule(string input);
 
+    enum LightAction
+    {
+        Unknown,
+        On,
+        Off,
+        Toggle
+    }
 }
