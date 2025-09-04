@@ -381,4 +381,3 @@ static bool Rule5(string input)
     return res;
 }
 
-delegate bool Rule(string input);

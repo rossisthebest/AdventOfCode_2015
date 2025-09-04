@@ -11,4 +11,6 @@ namespace AdventOfCode_2015.Types
         public int x, y;
     }
 
+    delegate bool Rule(string input);
+
 }
