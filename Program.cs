@@ -258,24 +258,21 @@ static string ByteArrayToString(byte[] arrInput)
 
 static void DayFive()
 {
-    int ruleListLength = 3;
-    Rule[] rules = new Rule[ruleListLength];
+    List<Rule> rules = new List<Rule>() { Rule1, Rule2, Rule3 };
+    List<Rule> rulesPart2 = new List<Rule>() { Rule4, Rule5 };
 
     List<string> checkList = File.ReadAllLines("Inputs\\Day5a.txt").ToList();
     List<string> niceList = new List<string>();
+    List<string> niceListPart2 = new List<string>();
     List<string> naughtyList = new List<string>();
-
-    rules[0] = Rule1;
-    rules[1] = Rule2;
-    rules[2] = Rule3;
 
     foreach (string toCheck in checkList)
     {
-        for (int i = 0; i < ruleListLength; i++)
+        for (int i = 0; i < rules.Count; i++)
         {
             if (rules[i](toCheck))
             {
-                if (i == ruleListLength - 1)
+                if (i == rules.Count - 1)
                 {
                     niceList.Add(toCheck);
                 }
@@ -286,13 +283,30 @@ static void DayFive()
                 break;
             }
         }
+
+        for (int i = 0; i < rulesPart2.Count; i++)
+        {
+            if (rulesPart2[i](toCheck))
+            {
+                if (i == rulesPart2.Count - 1)
+                {
+                    niceListPart2.Add(toCheck);
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
     }
 
     int niceCount = niceList.Count;
     int naughtyCount = naughtyList.Count;
+    int nicePart2Count = niceListPart2.Count;
 
     Console.WriteLine($"NiceCount: {niceCount}");
     Console.WriteLine($"NaughtyCount: {naughtyCount}");
+    Console.WriteLine($"NicePart2Count: {nicePart2Count}");
     Console.ReadLine();
 }
 
@@ -324,7 +338,46 @@ static bool Rule3(string input)
 {
     // It does not contain the strings ab, cd, pq, or xy, even if they are part of one of the other requirements.
     List<string> badWords = new List<string>() { "ab", "cd", "pq", "xy" };
-    bool res = !badWords.Exists(x=> input.Contains(x));
+    bool res = !badWords.Exists(x => input.Contains(x));
+    return res;
+}
+
+static bool Rule4(string input)
+{
+    //It contains a pair of any two letters that appears at least twice in the string without overlapping, like xyxy(xy) or aabcdefgaa(aa), but not like aaa(aa, but it overlaps).
+    bool res = false;
+    for (int i = 1; i < input.Length - 2; i++)
+    {
+        string pattern = string.Concat(input[i - 1],input[i]);
+        if ((input[i] == input[i + 2])
+            && (input[i-1] == input[i+1]))
+        {
+            res = true;
+            break;
+        }
+        else if (input.Substring(i+1).Contains(pattern))
+        {
+            res = true;
+            break;
+        }
+
+    }
+    return res;
+}
+
+static bool Rule5(string input)
+{
+    //It contains at least one letter which repeats with exactly one letter between them, like xyx, abcdefeghi(efe), or even aaa.
+    bool res = false;
+    for (int i = 1; i < input.Length - 1; i++)
+    {
+        if (input[i-1] == input[i + 1])
+        {
+            res = true;
+            break;
+        }
+
+    }
     return res;
 }
 
