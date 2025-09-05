@@ -361,10 +361,4 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/Inputs/Day1a.txt
-/Inputs/Day1b.txt
-/Inputs/Day2a.txt
-/Inputs/Day3a.txt
-/Inputs/Day4a.txt
-/Inputs/Day5a.txt
-/Inputs/Day6a.txt
+/Inputs/*.txt
