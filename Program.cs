@@ -8,7 +8,8 @@ using System.Text;
 //DayThree();
 //DayFour();
 //DayFive();
-DaySix();
+//DaySix();
+DaySeven();
 
 static void DayOne()
 {
@@ -518,5 +519,219 @@ static void ProcessBrightnessCommand(LightCommand command, int[,] lightBrightnes
             }
         }
 
+    }
+}
+
+static void DaySeven()
+{
+    List<string> commands = File.ReadAllLines("Inputs\\Day7a.txt").ToList();
+    //List<string> commands = new List<string>() { "123 -> x", "456 -> y","x AND y -> d","x OR y -> e","x LSHIFT 2 -> f","y RSHIFT 2 -> g","NOT x -> h","NOT y -> i"};
+    Dictionary<string, ushort> wireSet = new Dictionary<string, ushort>();
+    List<BitwiseCommand> bitwiseCommands = new List<BitwiseCommand>();
+
+    foreach (string command in commands)
+    {
+        bitwiseCommands.Add(GetBitwiseCommand(command));
+        //ProcessBitwiseCommand(bwCommand, ref wireSet);
+    }
+
+    var rootZeroCommands = bitwiseCommands.Where(x=> x.Wires.ToList().Count(y=> !y.UsingReference) == x.Wires.Count());
+
+    foreach (var rootZeroCommand in rootZeroCommands)
+    {
+        FindAndProcessCommandReference(rootZeroCommand, ref bitwiseCommands, ref wireSet);
+    }
+
+    //foreach (BitwiseCommand bitwiseCommand in bitwiseCommands)
+    //{
+    //    string[] referenceInputs = bitwiseCommand.GetReferenceInputs();
+    //    if (referenceInputs == null)
+    //    {
+    //        FindAndProcessCommandReference(referenceInputs, ref bitwiseCommands, ref wireSet);
+    //    }
+    //    else
+    //    {
+    //        ProcessBitwiseCommand(bitwiseCommand, ref wireSet);
+    //    }
+    //}
+
+
+    ushort answer = wireSet["a"];
+
+    Console.WriteLine($"Answer: {answer}");
+    Console.ReadLine();
+}
+
+static void FindAndProcessCommandReference(BitwiseCommand currentCommand, ref List<BitwiseCommand> bitwiseCommands, ref Dictionary<string, ushort> wireSet)
+{
+    //foreach (Wire wire in currentCommand.Wires)
+    //{
+    //    if (wire.UsingReference)
+    //    {
+    //        BitwiseCommand refCommand = bitwiseCommands.FirstOrDefault(x => x.DestinationKey.Equals(wire.Reference, StringComparison.OrdinalIgnoreCase));
+    //        FindAndProcessCommandReference(refCommand, ref bitwiseCommands, ref wireSet);
+    //    }
+    //}
+    ProcessBitwiseCommand(currentCommand, ref wireSet);
+
+    List<BitwiseCommand> childWireReferences = bitwiseCommands.Where(x=> x.Wires.ToList().Exists(y=> y.UsingReference && y.Reference.Equals(currentCommand.DestinationKey, StringComparison.OrdinalIgnoreCase))).ToList();
+
+    foreach (BitwiseCommand childCommand in childWireReferences)
+    {
+        FindAndProcessCommandReference(childCommand, ref bitwiseCommands, ref wireSet);
+    }
+}
+
+static BitwiseCommand GetBitwiseCommand(string command)
+{
+    BitwiseAction action = BitwiseAction.Unknown;
+
+    // Examples:
+    //NOT dq -> dr
+    //kg OR kf->kh
+    //44430->b
+    //eg AND ei->ej
+    //lf RSHIFT 2->lg
+    //eo LSHIFT 15->es
+    string[] breakdown = command.Split("->");
+
+    string destinationKey = breakdown[1].Trim();
+
+    string inputCommand = breakdown[0].Trim();
+
+    string input1, input2, keyword;
+    input1 = input2 = keyword = string.Empty;
+
+    if (inputCommand.Contains("NOT"))
+    {
+        action = BitwiseAction.Not;
+        input1 = inputCommand.Replace("NOT", "").Trim();
+    }
+    else if (inputCommand.Contains("OR"))
+    {
+        action = BitwiseAction.Or;
+        keyword = "OR";
+    }
+    else if (inputCommand.Contains("AND"))
+    {
+        action = BitwiseAction.And;
+        keyword = "AND";
+    }
+    else if (inputCommand.Contains("RSHIFT"))
+    {
+        action = BitwiseAction.RShift;
+        keyword = "RSHIFT";
+    }
+    else if (inputCommand.Contains("LSHIFT"))
+    {
+        action = BitwiseAction.LShift;
+        keyword = "LSHIFT";
+    }
+    else
+    {
+        // Treat as single input set
+        action = BitwiseAction.None;
+        input1 = inputCommand;
+    }
+
+    if (!string.IsNullOrEmpty(keyword))
+    {
+        string[] inputs = inputCommand.Split(keyword);
+        input1 = inputs[0].Trim();
+        input2 = inputs[1].Trim();
+    }
+
+
+    ushort input1Value, input2Value;
+    bool hasInputReferences = false;
+    input1Value = input2Value = 0;
+
+    if (!ushort.TryParse(input1, out input1Value))
+    {
+        hasInputReferences = true;
+        input1Value = 0;
+    }
+
+    List<Wire> wires = new List<Wire>();
+
+    Wire inputWire1 = new Wire()
+    {
+        Reference = hasInputReferences ? input1 : string.Empty,
+        Value = hasInputReferences ? (ushort)0 : input1Value,
+        UsingReference = hasInputReferences
+    };
+
+    wires.Add(inputWire1);
+
+    hasInputReferences = false;
+    if (action > BitwiseAction.Not)
+    {
+        if (!ushort.TryParse(input2, out input2Value))
+        {
+            hasInputReferences = true;
+            input2Value = 0;
+        }
+
+        Wire inputWire2 = new Wire()
+        {
+            Reference = hasInputReferences ? input2 : string.Empty,
+            Value = hasInputReferences ? (ushort)0 : input2Value,
+            UsingReference = hasInputReferences
+        };
+
+        wires.Add(inputWire2);
+    }
+
+    BitwiseCommand bwCommand = new BitwiseCommand()
+    {
+        Action = action,
+        DestinationKey = destinationKey,
+        //InputReferences = new string[] { input1, input2 },
+        //InputValues = new uint[] { input1Value, input2Value }
+        Wires = wires.ToArray()
+    };
+
+    return bwCommand;
+}
+
+static void ProcessBitwiseCommand(BitwiseCommand bwCommand, ref Dictionary<string, ushort> wireSet)
+{
+    int output;
+
+    switch (bwCommand.Action)
+    {
+        case BitwiseAction.Unknown:
+            throw new NotImplementedException();
+            break;
+        case BitwiseAction.None:
+            output = bwCommand.Wires[0].Value;
+            break;
+        case BitwiseAction.And:
+            output = bwCommand.Wires[0].Value & bwCommand.Wires[1].Value;
+            break;
+        case BitwiseAction.LShift:
+            output = bwCommand.Wires[0].Value << bwCommand.Wires[1].Value;
+            break;
+        case BitwiseAction.Not:
+            output = (ushort)~bwCommand.Wires[0].Value;
+            break;
+        case BitwiseAction.Or:
+            output = bwCommand.Wires[0].Value | bwCommand.Wires[1].Value;
+            break;
+        case BitwiseAction.RShift:
+            output = bwCommand.Wires[0].Value >> bwCommand.Wires[1].Value;
+            break;
+        default:
+            throw new NotImplementedException();
+            break;
+    }
+
+    if (!wireSet.ContainsKey(bwCommand.DestinationKey))
+    {
+        wireSet.Add(bwCommand.DestinationKey, (ushort)output);
+    }
+    else
+    {
+        wireSet[bwCommand.DestinationKey] = (ushort)output;
     }
 }
