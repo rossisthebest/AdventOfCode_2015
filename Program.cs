@@ -3,6 +3,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 
+
 //DayOne();
 //DayTwo();
 //DayThree();
@@ -526,21 +527,23 @@ static void DaySeven()
 {
     List<string> commands = File.ReadAllLines("Inputs\\Day7a.txt").ToList();
     //List<string> commands = new List<string>() { "123 -> x", "456 -> y","x AND y -> d","x OR y -> e","x LSHIFT 2 -> f","y RSHIFT 2 -> g","NOT x -> h","NOT y -> i"};
-    Dictionary<string, ushort> wireSet = new Dictionary<string, ushort>();
+    //Dictionary<string, ushort> wireSet = new Dictionary<string, ushort>();
+    Dictionary<string, Wire> wireSet = new Dictionary<string, Wire>();
     List<BitwiseCommand> bitwiseCommands = new List<BitwiseCommand>();
 
     foreach (string command in commands)
     {
-        bitwiseCommands.Add(GetBitwiseCommand(command));
+        bitwiseCommands.Add(GetBitwiseCommand(command, ref wireSet));
         //ProcessBitwiseCommand(bwCommand, ref wireSet);
     }
 
-    var rootZeroCommands = bitwiseCommands.Where(x=> x.Wires.ToList().Count(y=> !y.UsingReference) == x.Wires.Count());
+    var rootZeroCommand = bitwiseCommands.FirstOrDefault(x=> x.WireRefs.ToList().Count(y=> !wireSet[y].UsingReference) == x.WireRefs.Count());
+    FindAndProcessCommandReference(rootZeroCommand, ref bitwiseCommands, ref wireSet);
 
-    foreach (var rootZeroCommand in rootZeroCommands)
-    {
-        FindAndProcessCommandReference(rootZeroCommand, ref bitwiseCommands, ref wireSet);
-    }
+    //foreach (var rootZeroCommand in rootZeroCommands)
+    //{
+    //    FindAndProcessCommandReference(rootZeroCommand, ref bitwiseCommands, ref wireSet);
+    //}
 
     //foreach (BitwiseCommand bitwiseCommand in bitwiseCommands)
     //{
@@ -556,25 +559,33 @@ static void DaySeven()
     //}
 
 
-    ushort answer = wireSet["a"];
+    ushort answer = wireSet["a"].Value;
 
     Console.WriteLine($"Answer: {answer}");
     Console.ReadLine();
 }
 
-static void FindAndProcessCommandReference(BitwiseCommand currentCommand, ref List<BitwiseCommand> bitwiseCommands, ref Dictionary<string, ushort> wireSet)
+static void FindAndProcessCommandReference(BitwiseCommand currentCommand, ref List<BitwiseCommand> bitwiseCommands, ref Dictionary<string, Wire> wireSet)
 {
-    //foreach (Wire wire in currentCommand.Wires)
-    //{
-    //    if (wire.UsingReference)
-    //    {
-    //        BitwiseCommand refCommand = bitwiseCommands.FirstOrDefault(x => x.DestinationKey.Equals(wire.Reference, StringComparison.OrdinalIgnoreCase));
-    //        FindAndProcessCommandReference(refCommand, ref bitwiseCommands, ref wireSet);
-    //    }
-    //}
+    foreach (string wireRef in currentCommand.WireRefs)
+    {
+        if ((!wireSet[wireRef].HasProcessed) && (wireSet[wireRef].UsingReference))
+        {
+            BitwiseCommand refCommand = bitwiseCommands.FirstOrDefault(x => x.DestinationKey.Equals(wireRef, StringComparison.OrdinalIgnoreCase));
+            FindAndProcessCommandReference(refCommand, ref bitwiseCommands, ref wireSet);
+        }
+    }
     ProcessBitwiseCommand(currentCommand, ref wireSet);
+    //bitwiseCommands.Where(x => x.DestinationKey.Equals(currentCommand.DestinationKey, StringComparison.OrdinalIgnoreCase)).Select(x => { x.HasProcessed = true; return x; }).ToList();
+    //bitwiseCommands.ToList().ForEach(x => x.HasProcessed = true);
+    bitwiseCommands.Remove(currentCommand);
+    currentCommand.HasProcessed = true;
+    bitwiseCommands.Add(currentCommand);
 
-    List<BitwiseCommand> childWireReferences = bitwiseCommands.Where(x=> x.Wires.ToList().Exists(y=> y.UsingReference && y.Reference.Equals(currentCommand.DestinationKey, StringComparison.OrdinalIgnoreCase))).ToList();
+
+    Dictionary<string, Wire> copy = wireSet;
+
+    List<BitwiseCommand> childWireReferences = bitwiseCommands.Where(x=> !x.HasProcessed && x.WireRefs.ToList().Exists(y=> /*!copy[y].HasProcessed && */copy[y].UsingReference && y.Equals(currentCommand.DestinationKey, StringComparison.OrdinalIgnoreCase))).ToList();
 
     foreach (BitwiseCommand childCommand in childWireReferences)
     {
@@ -582,7 +593,7 @@ static void FindAndProcessCommandReference(BitwiseCommand currentCommand, ref Li
     }
 }
 
-static BitwiseCommand GetBitwiseCommand(string command)
+static BitwiseCommand GetBitwiseCommand(string command, ref Dictionary<string, Wire> wireSet)
 {
     BitwiseAction action = BitwiseAction.Unknown;
 
@@ -652,16 +663,31 @@ static BitwiseCommand GetBitwiseCommand(string command)
         input1Value = 0;
     }
 
-    List<Wire> wires = new List<Wire>();
+    List<string> wires = new List<string>();
 
+    string manualWire = "Manual_" + DateTime.Now.Ticks.ToString();
     Wire inputWire1 = new Wire()
     {
-        Reference = hasInputReferences ? input1 : string.Empty,
+        Reference = hasInputReferences ? input1 : manualWire,
         Value = hasInputReferences ? (ushort)0 : input1Value,
         UsingReference = hasInputReferences
     };
+    if (hasInputReferences)
+    {
+        if (!wireSet.ContainsKey(input1))
+        {
+            wireSet.Add(input1, inputWire1);
+        }
 
-    wires.Add(inputWire1);
+        wires.Add(input1);
+    }
+    else
+    {
+        inputWire1.HasProcessed = true;
+        wireSet.Add(manualWire, inputWire1);
+        wires.Add(manualWire);
+    }
+    
 
     hasInputReferences = false;
     if (action > BitwiseAction.Not)
@@ -672,14 +698,28 @@ static BitwiseCommand GetBitwiseCommand(string command)
             input2Value = 0;
         }
 
+        manualWire = "Manual_" + DateTime.Now.Ticks.ToString();
         Wire inputWire2 = new Wire()
         {
-            Reference = hasInputReferences ? input2 : string.Empty,
+            Reference = hasInputReferences ? input2 : manualWire,
             Value = hasInputReferences ? (ushort)0 : input2Value,
             UsingReference = hasInputReferences
         };
 
-        wires.Add(inputWire2);
+        if (hasInputReferences) 
+        {
+            if (!wireSet.ContainsKey(input2))
+            {
+                wireSet.Add(input2, inputWire2);
+            }
+            wires.Add(input2);
+        }
+        else
+        {
+            inputWire2.HasProcessed = true;
+            wireSet.Add(manualWire, inputWire2);
+            wires.Add(manualWire);
+        }
     }
 
     BitwiseCommand bwCommand = new BitwiseCommand()
@@ -688,15 +728,32 @@ static BitwiseCommand GetBitwiseCommand(string command)
         DestinationKey = destinationKey,
         //InputReferences = new string[] { input1, input2 },
         //InputValues = new uint[] { input1Value, input2Value }
-        Wires = wires.ToArray()
+        WireRefs = wires.ToArray()
     };
 
     return bwCommand;
 }
 
-static void ProcessBitwiseCommand(BitwiseCommand bwCommand, ref Dictionary<string, ushort> wireSet)
+static void ProcessBitwiseCommand(BitwiseCommand bwCommand, ref Dictionary<string, Wire> wireSet)
 {
     int output;
+
+    ushort inputValue1 = wireSet[bwCommand.WireRefs[0]].Value;
+    ushort inputValue2 = 0;
+    if (wireSet[bwCommand.WireRefs[0]].UsingReference)
+    {
+        inputValue1 = wireSet[wireSet[bwCommand.WireRefs[0]].Reference].Value;
+    }
+
+    if (bwCommand.Action > BitwiseAction.Not)
+    {
+        inputValue2 = wireSet[bwCommand.WireRefs[1]].Value;
+        if (wireSet[bwCommand.WireRefs[1]].UsingReference)
+        {
+            inputValue2 = wireSet[wireSet[bwCommand.WireRefs[1]].Reference].Value;
+        }
+
+    }
 
     switch (bwCommand.Action)
     {
@@ -704,22 +761,22 @@ static void ProcessBitwiseCommand(BitwiseCommand bwCommand, ref Dictionary<strin
             throw new NotImplementedException();
             break;
         case BitwiseAction.None:
-            output = bwCommand.Wires[0].Value;
+            output = inputValue1;
             break;
         case BitwiseAction.And:
-            output = bwCommand.Wires[0].Value & bwCommand.Wires[1].Value;
+            output = inputValue1 & inputValue2;
             break;
         case BitwiseAction.LShift:
-            output = bwCommand.Wires[0].Value << bwCommand.Wires[1].Value;
+            output = inputValue1 << inputValue2;
             break;
         case BitwiseAction.Not:
-            output = (ushort)~bwCommand.Wires[0].Value;
+            output = (ushort)~inputValue1;
             break;
         case BitwiseAction.Or:
-            output = bwCommand.Wires[0].Value | bwCommand.Wires[1].Value;
+            output = inputValue1 | inputValue2;
             break;
         case BitwiseAction.RShift:
-            output = bwCommand.Wires[0].Value >> bwCommand.Wires[1].Value;
+            output = inputValue1 >> inputValue2;
             break;
         default:
             throw new NotImplementedException();
@@ -728,10 +785,22 @@ static void ProcessBitwiseCommand(BitwiseCommand bwCommand, ref Dictionary<strin
 
     if (!wireSet.ContainsKey(bwCommand.DestinationKey))
     {
-        wireSet.Add(bwCommand.DestinationKey, (ushort)output);
+        Wire wire = new Wire()
+        {
+            Reference = String.Empty,
+            Value = (ushort)output,
+            UsingReference = false,
+            HasProcessed = true
+        };
+        wireSet.Add(bwCommand.DestinationKey, wire);
     }
     else
     {
-        wireSet[bwCommand.DestinationKey] = (ushort)output;
+        //KeyValuePair<string, Wire> dest = wireSet.FirstOrDefault(x => x.Key.Equals(bwCommand.DestinationKey, StringComparison.OrdinalIgnoreCase));
+        //Wire w = dest.Value;
+        Wire w = wireSet[bwCommand.DestinationKey];
+        w.Value = (ushort)output;
+        w.HasProcessed = true;
+        wireSet[bwCommand.DestinationKey] = w;
     }
 }

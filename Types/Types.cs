@@ -38,19 +38,23 @@ namespace AdventOfCode_2015.Types
         RShift
     }
 
-    struct Wire
+    unsafe struct Wire
     {
         public string Name;
         public string Reference;
         public ushort Value;
         public bool UsingReference;
+        public bool HasProcessed;
     }
 
     struct BitwiseCommand
     {
         public BitwiseAction Action;
         public string DestinationKey;
-        public Wire[] Wires;
+        //public Wire[] Wires;
+        public string[] WireRefs;
+        public bool HasProcessed;
+
         //public string[] InputReferences;
         //public uint[] InputValues;
         //public bool HasInputReferences;
@@ -86,8 +90,8 @@ namespace AdventOfCode_2015.Types
         //    {
         //        result = true;
         //    }
-            
-            
+
+
         //    if (Action > BitwiseAction.Not)
         //    {
         //        if (!ushort.TryParse(Inputs[1], out input2))
