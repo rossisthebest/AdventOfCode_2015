@@ -10,7 +10,8 @@ using System.Text;
 //DayFour();
 //DayFive();
 //DaySix();
-DaySeven();
+//DaySeven();
+DayEight();
 
 static void DayOne()
 {
@@ -803,4 +804,79 @@ static void ProcessBitwiseCommand(BitwiseCommand bwCommand, ref Dictionary<strin
         w.HasProcessed = true;
         wireSet[bwCommand.DestinationKey] = w;
     }
+}
+
+static void DayEight()
+{
+    List<string> inputs = File.ReadAllLines("Inputs\\Day8a.txt").ToList();
+
+    int literalCharCount, stringCharCount;
+    literalCharCount = stringCharCount = 0;
+
+    int linesProcessed = 0;
+
+    foreach (string input in inputs)
+    {
+        linesProcessed++;
+
+        Tuple<int, int> result = CharacterCount(input);
+
+        if (result.Item1 == 0 || result.Item2 == 0)
+        {
+
+        }
+        literalCharCount = literalCharCount + result.Item1;
+        stringCharCount = stringCharCount + result.Item2;
+    }
+
+    Console.WriteLine($"literalCharCount: {literalCharCount}");
+    Console.WriteLine($"stringCharCount: {stringCharCount}");
+    Console.WriteLine($"Difference: {literalCharCount-stringCharCount}");
+
+    Console.ReadLine();
+}
+
+static Tuple<int, int> CharacterCount(string input)
+{
+    int literalCharCount, stringCharCount, startIndex;
+
+    literalCharCount = stringCharCount = 0;
+    startIndex = 1;
+
+    char[] chars = input.ToCharArray();
+
+    literalCharCount = chars.Length;
+
+    if (chars[0] != '"')
+    {
+        literalCharCount = literalCharCount + 2;
+        startIndex = 0;
+    }
+
+    for (int i = startIndex; i < chars.Length - startIndex; i++)
+    {
+        stringCharCount++;
+        if (chars[i] == '\\')
+        {
+            if (chars[i+1] == 'x')
+            {
+                i = i+3;
+            }
+            else if (chars[i + 1] == '"')
+            {
+                i++;
+            }
+            else if (chars[i+1] == '\\')
+            {
+                i++;
+            }
+        }
+        else if (chars[i] == '\"')
+        {
+            stringCharCount++;
+        }
+
+    }
+
+    return new Tuple<int, int>(literalCharCount, stringCharCount);
 }
