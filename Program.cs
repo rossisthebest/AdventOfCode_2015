@@ -810,8 +810,8 @@ static void DayEight()
 {
     List<string> inputs = File.ReadAllLines("Inputs\\Day8a.txt").ToList();
 
-    int literalCharCount, stringCharCount;
-    literalCharCount = stringCharCount = 0;
+    int literalCharCount, stringCharCount, replacementLiteralCharCount;
+    literalCharCount = stringCharCount = replacementLiteralCharCount = 0;
 
     int linesProcessed = 0;
 
@@ -819,64 +819,170 @@ static void DayEight()
     {
         linesProcessed++;
 
-        Tuple<int, int> result = CharacterCount(input);
 
-        if (result.Item1 == 0 || result.Item2 == 0)
-        {
-
-        }
+        Tuple<int, int> result = CharacterCount(input, false);
+        string replacement = encodeString(input);
         literalCharCount = literalCharCount + result.Item1;
         stringCharCount = stringCharCount + result.Item2;
+
+        Tuple<int, int> replacementResult = CharacterCount(replacement, true);
+        replacementLiteralCharCount = replacementLiteralCharCount + replacementResult.Item1;
     }
 
     Console.WriteLine($"literalCharCount: {literalCharCount}");
     Console.WriteLine($"stringCharCount: {stringCharCount}");
-    Console.WriteLine($"Difference: {literalCharCount-stringCharCount}");
+    Console.WriteLine($"Difference: {literalCharCount - stringCharCount}");
+
+    Console.WriteLine($"replacementLiteralCharCount: {replacementLiteralCharCount}");
+    Console.WriteLine($"Difference: {replacementLiteralCharCount - literalCharCount}");
 
     Console.ReadLine();
 }
 
-static Tuple<int, int> CharacterCount(string input)
+static Tuple<int, int> CharacterCount(string input, bool isEncoded)
 {
     int literalCharCount, stringCharCount, startIndex;
 
     literalCharCount = stringCharCount = 0;
-    startIndex = 1;
+    if (isEncoded)
+    {
+        startIndex = 2;
+        literalCharCount = 2;
+        input = input.Substring(1, input.Length - 2);
+    }
+    else
+    {
+        startIndex = 1;
+    }
 
     char[] chars = input.ToCharArray();
 
-    literalCharCount = chars.Length;
+    if (isEncoded)
+    {
+        literalCharCount = literalCharCount + chars.Length;
+
+        if (chars[0] != '\\' && chars[1] != '"')
+        {
+            literalCharCount = literalCharCount + 4;
+            startIndex = 0;
+        }
+
+    }
+    else
+    {
+        literalCharCount = chars.Length;
+        if (chars[0] != '"')
+        {
+            literalCharCount = literalCharCount + 2;
+            startIndex = 0;
+        }
+    }
+
+        for (int i = startIndex; i < chars.Length - startIndex; i++)
+        {
+            stringCharCount++;
+            if (chars[i] == '\\')
+            {
+                if (isEncoded)
+                {
+                    if (chars[i + 1] == '\\' && chars[i + 2] == 'x')
+                    {
+                        i = i + 4;
+                    }
+                    else if (chars[i + 1] == '\\' && chars[i + 2] == '\\' &&
+                        chars[i + 3] == '"')
+                    {
+                        i = i + 3;
+                    }
+                    else if (chars[i + 1] == '\\')
+                    {
+                        i++;
+                    }
+                }
+                else
+                {
+                    if (chars[i+1] == 'x')
+                    {
+                        i = i+3;
+                    }
+                    else if (chars[i + 1] == '"')
+                    {
+                        i++;
+                    }
+                    else if (chars[i+1] == '\\')
+                    {
+                        i++;
+                    }
+                }
+            }
+            else if (chars[i] == '\"')
+            {
+                stringCharCount++;
+            }
+
+        }
+
+    return new Tuple<int, int>(literalCharCount, stringCharCount);
+}
+
+static string encodeString(string input)
+{
+    int startIndex = 1;
+    List<char> newChars = new List<char>();
+
+    char[] chars = input.ToCharArray();
+    newChars.Add('"');
+    newChars.Add('\\');
+    newChars.Add('"');
 
     if (chars[0] != '"')
     {
-        literalCharCount = literalCharCount + 2;
         startIndex = 0;
     }
 
     for (int i = startIndex; i < chars.Length - startIndex; i++)
     {
-        stringCharCount++;
         if (chars[i] == '\\')
         {
-            if (chars[i+1] == 'x')
+            if (chars[i + 1] == 'x')
             {
-                i = i+3;
+                newChars.Add('\\');
+                newChars.Add('\\');
+                newChars.Add('x');
+                newChars.Add(chars[i + 2]);
+                newChars.Add(chars[i + 3]);
+                i = i + 3;
             }
             else if (chars[i + 1] == '"')
             {
+                newChars.Add('\\');
+                newChars.Add('\\');
+                newChars.Add('\\');
+                newChars.Add('"');
                 i++;
             }
-            else if (chars[i+1] == '\\')
+            else if (chars[i + 1] == '\\')
             {
+                newChars.Add('\\');
+                newChars.Add('\\');
+                newChars.Add('\\');
+                newChars.Add('\\');
                 i++;
             }
         }
         else if (chars[i] == '\"')
         {
-            stringCharCount++;
+
+        }
+        else
+        {
+            newChars.Add(chars[i]);
         }
 
     }
+    newChars.Add('\\');
+    newChars.Add('"');
+    newChars.Add('"');
 
-    return new Tuple<int, int>(literalCharCount, stringCharCount);
+    return new string(newChars.ToArray());
 }
